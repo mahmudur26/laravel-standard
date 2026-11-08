@@ -1,0 +1,86 @@
+on:
+  push:
+    branches:
+      - production
+
+name: 🚀 Deploy Application to Production
+
+env:
+  DEPLOY_PATH: /home/*******/public_html
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🗜️ Zip project files
+        run: |
+          zip -r latest.zip \
+            app \
+            bootstrap \
+            config \
+            database \
+            public \
+            resources \
+            routes \
+            storage/framework \
+            vendor \
+            artisan \
+            composer.json \
+            composer.lock \
+            --exclude "storage/framework/sessions/*" \
+            --exclude "storage/framework/cache/*" \
+            --exclude "storage/framework/views/*" \
+            --exclude "*.git*" \
+            --exclude "node_modules/*"
+
+      - name: 📁 Create zip directory
+        run: mkdir -p zip && cp latest.zip zip/latest.zip
+
+      - name: 📂 Transfer zip to server via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.server_ip }}
+          port: ${{ secrets.server_port }}
+          username: ${{ secrets.ftp_username }}
+          password: ${{ secrets.ftp_password }}
+          local-dir: ./zip/
+          server-dir: ./zip/
+
+      - name: 🚀 SSH — Unzip and run post-deploy commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ssh_ip }}
+          port: ${{ secrets.ssh_port }}
+          username: ${{ secrets.ssh_username }}
+          password: ${{ secrets.ssh_password }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+
+            # Unzip new code
+            unzip -o ${{ env.DEPLOY_PATH }}/zip/latest.zip -d ${{ env.DEPLOY_PATH }}/
+
+            # Clean up zip
+            rm ${{ env.DEPLOY_PATH }}/zip/latest.zip
+
+            # Set correct permissions
+            chmod -R 775 storage/
+            chmod -R 775 bootstrap/cache/
+
+            # Clear and rebuild all caches
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan route:cache
+            php artisan view:cache
+            php artisan db:seed --class=PermissionSeeder
+
+            # Run any pending migrations
+            php artisan migrate --force
+
+            echo "✅ Deployment completed successfully"

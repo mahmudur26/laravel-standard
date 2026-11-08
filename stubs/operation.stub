@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ namespace }};
+
+class {{ class }}
+{
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the operation.
+     *
+     * @return void
+     */
+    public function handle():void
+    {
+        //
+    }
+}
