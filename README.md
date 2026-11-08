@@ -77,7 +77,7 @@ Clone it, rename it, and start building features.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/<your-repo>.git
+git clone https://github.com/mahmudur26/laravel-standard.git
 cd <your-repo>
 
 # 2. Install PHP dependencies
