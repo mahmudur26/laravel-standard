@@ -216,6 +216,10 @@ Two recording mechanisms track traffic:
 
 Using `jenssegers/agent`, each hit can capture device, browser, and platform details, which feed the dashboard widgets and trend charts.
 
+### 11. PDF Generator
+
+`trianity/laravel-mpdf` is being added.
+
 ---
 
 ## Project Structure
